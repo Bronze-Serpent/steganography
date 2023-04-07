@@ -1,124 +1,66 @@
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
 import java.util.List;
 
 
 public class Main
 {
-    private static final int QUANTITY_USED_BITS = 2;
-
     public static void main(String[] args) throws IOException
     {
-
-        BufferedImage image = ImageIO.read(new File("src/main/resources/petr.png"));
-
-        BufferedImage newImage = hideInf(image, "oh, hello there".getBytes());
-
-        File outputfile = new File("src/main/resources/completed.png");
-        ImageIO.write(newImage, "png", outputfile);
-
-        byte[] textAsBytes = "oh, hello there".getBytes();
-        byte[] preparedBytes = preparedInfBytes("oh, hello there".getBytes());
-        List<Byte> butes = takeOutInf(newImage, 60);
-        byte[] takenOutInf = combineInf(butes);
-        String takenText = new String(takenOutInf);
-        System.out.println(takenText);
-
-
+        //task1();
+        t1();
     }
 
 
-    static BufferedImage hideInf(BufferedImage image, byte[] information)
+    public static void task1() throws IOException
     {
-        if (!isInfPlacedInTheContainer(image, information))
-            System.out.println("With the given settings, the information is not placed in the container.");
+        BufferedImage image = ImageIO.read(new File("src/main/resources/Saruman.jpg"));
+        ByteDistributor distributor = new SimpleByteDistributor();
+        GraphicStorekeeper graphicStorekeeper = new PictureStorekeeper(image, distributor);
 
-        BufferedImage stegoContainer = makeImageCopy(image);
-        Random elector = new Random((long) stegoContainer.getHeight() * stegoContainer.getWidth());
-        byte[] preparedBytes = preparedInfBytes(information);
+        byte[] inf = "This is my text".getBytes();
+        int qInByte = 3;
 
-        for (byte preparedByte : preparedBytes)
-        {
-            int x = elector.nextInt(stegoContainer.getWidth());
-            int y = elector.nextInt(stegoContainer.getHeight());
-            Color pixelColor = new Color(stegoContainer.getRGB(x, y));
-
-            int b = pixelColor.getAlpha() & 252 | preparedByte;
-
-            stegoContainer.setRGB(x, y, new Color(pixelColor.getRed(), pixelColor.getGreen(), b).getRGB());
-        }
-
-        return stegoContainer;
+        graphicStorekeeper.putIn(List.of(Channel.ALPHA), inf, qInByte);
+        System.out.println(new String(graphicStorekeeper.takeOutInf(List.of(Channel.ALPHA), qInByte, inf.length)));
     }
 
 
-    static List<Byte> takeOutInf(BufferedImage stegoContainer, int bitsQuantity)
+    static void testAlpha() throws IOException
     {
-        Random elector = new Random((long) stegoContainer.getHeight() * stegoContainer.getWidth());
-        List<Byte> readBytes = new LinkedList<>();
+        BufferedImage image = ImageIO.read(new File("src/main/resources/Saruman.jpg"));
+        ByteDistributor distributor = new SimpleByteDistributor();
+        PictureStorekeeper p = new PictureStorekeeper(image, distributor);
+        GraphicStorekeeper graphicStorekeeper = p;
 
-        for (int i = 0; i < bitsQuantity; i++)
-        {
-            int x = elector.nextInt(stegoContainer.getWidth());
-            int y = elector.nextInt(stegoContainer.getHeight());
-            Color pixelColor = new Color(stegoContainer.getRGB(x, y));
+        byte[] inf = "This is my text".getBytes();
+        int qInByte = 1;
 
-            byte inf = (byte) (pixelColor.getBlue() & 3);
-            readBytes.add(inf);
-        }
+        System.out.println(Arrays.toString(p.getAlphaBytes(qInByte, inf.length)));
+        graphicStorekeeper.putIn(List.of(Channel.ALPHA), inf, qInByte);
+        System.out.println(Arrays.toString(p.getAlphaBytes(qInByte, inf.length)));
 
-        return readBytes;
+        System.out.println(new String(graphicStorekeeper.takeOutInf(List.of(Channel.ALPHA), qInByte, inf.length)));
     }
 
 
-    static boolean isInfPlacedInTheContainer(BufferedImage stegoContainer, byte[] information)
+    static void t1()
     {
-        return  stegoContainer.getHeight() * stegoContainer.getWidth() * QUANTITY_USED_BITS > information.length * 8;
+        byte test = 63;
+
+        System.out.println(test);
+        System.out.println(Integer.toBinaryString(Byte.toUnsignedInt(test)));
+
+        for (Bitmask mask : Bitmask.values())
+            System.out.printf("Value equals: %3d for mask %11s mask: %8s\n", mask.apply(test), mask, Integer.toBinaryString(Byte.toUnsignedInt(mask.getMask())));
     }
 
-
-    static byte[] preparedInfBytes(byte[] information)
+    static void t3()
     {
-        byte[] preparedBytes = new byte[information.length * 4];
-        int i = 0;
-        for (byte b : information)
-        {
-            preparedBytes[i++] = (byte) ((b & 192) >>> 6);
-            preparedBytes[i++] = (byte) ((b & 48) >>> 4);
-            preparedBytes[i++] = (byte) ((b & 12) >>> 2);
-            preparedBytes[i++] = (byte) (b & 3);
-        }
-
-        return preparedBytes;
+        for (byte b = -128; b != 127; b++)
+            System.out.printf("num = %4d mask = %8s\n", b, Integer.toBinaryString(Byte.toUnsignedInt(b)));
     }
-
-
-    static byte[] combineInf(List<Byte> bytes)
-    {
-        byte[] inf = new byte[bytes.size() / 4];
-
-        for (int i = 0; i < inf.length; i++)
-            for (int j = 0; j < 4; j++)
-            {
-                inf[i] = (byte) (inf[i] | bytes.get(i * 4 + j));
-                if (j != 3)
-                    inf[i] = (byte) (inf[i] << 2);
-            }
-
-        return inf;
-    }
-
-
-    private static BufferedImage makeImageCopy(BufferedImage imageToCopy)
-    {
-        BufferedImage result = new BufferedImage(imageToCopy.getWidth(), imageToCopy.getHeight(), imageToCopy.getType());
-        Graphics g = result.getGraphics();
-        g.drawImage(imageToCopy, 0, 0, null);
-        return result;
-    }
-
 }
