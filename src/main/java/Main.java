@@ -1,8 +1,8 @@
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -10,40 +10,51 @@ public class Main
 {
     public static void main(String[] args) throws IOException
     {
+        //t1();
+        //alphaChannelTest();
         //task1();
-        t1();
+        task2();
     }
 
 
     public static void task1() throws IOException
     {
         BufferedImage image = ImageIO.read(new File("src/main/resources/Saruman.jpg"));
-        ByteDistributor distributor = new SimpleByteDistributor();
-        GraphicStorekeeper graphicStorekeeper = new PictureStorekeeper(image, distributor);
 
         byte[] inf = "This is my text".getBytes();
         int qInByte = 3;
 
-        graphicStorekeeper.putIn(List.of(Channel.ALPHA), inf, qInByte);
-        System.out.println(new String(graphicStorekeeper.takeOutInf(List.of(Channel.ALPHA), qInByte, inf.length)));
+        PictureStorekeeper.putIn(image, List.of(Channel.RED, Channel.GREEN, Channel.BLUE), inf, qInByte);
+        System.out.println(new String(PictureStorekeeper.takeOutInf(image, List.of(Channel.RED, Channel.GREEN, Channel.BLUE), qInByte, inf.length)));
     }
 
 
-    static void testAlpha() throws IOException
+    public static void task2() throws IOException
     {
-        BufferedImage image = ImageIO.read(new File("src/main/resources/Saruman.jpg"));
-        ByteDistributor distributor = new SimpleByteDistributor();
-        PictureStorekeeper p = new PictureStorekeeper(image, distributor);
-        GraphicStorekeeper graphicStorekeeper = p;
+        BufferedImage image = ImageIO.read(new File("src/main/resources/8.jpg"));
 
         byte[] inf = "This is my text".getBytes();
-        int qInByte = 1;
+        int q = 3;
+        double sglEnergy = 0.6;
 
-        System.out.println(Arrays.toString(p.getAlphaBytes(qInByte, inf.length)));
-        graphicStorekeeper.putIn(List.of(Channel.ALPHA), inf, qInByte);
-        System.out.println(Arrays.toString(p.getAlphaBytes(qInByte, inf.length)));
+        PictureStorekeeper.putInByCutter(image, inf, sglEnergy);
+        byte[] readInf = PictureStorekeeper.takeOutInfByCutter(image, q, inf.length);
+        System.out.println(new String(readInf));
+    }
 
-        System.out.println(new String(graphicStorekeeper.takeOutInf(List.of(Channel.ALPHA), qInByte, inf.length)));
+
+    static void alphaChannelTest() throws IOException
+    {
+        BufferedImage image = ImageIO.read(new File("src/main/resources/Saruman.jpg"));
+
+        Color color = new Color(12,12,12, 0);
+        image.setRGB(0, 0, color.getRGB());
+
+        System.out.println(Integer.toBinaryString(color.getAlpha()));
+        System.out.println(Integer.toBinaryString(image.getRGB(0, 0)));
+
+        System.out.println(new Color(image.getRGB(0, 0), true).getRed());
+        System.out.println(new Color(image.getRGB(0, 0), true).getAlpha());
     }
 
 
