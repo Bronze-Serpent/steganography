@@ -89,7 +89,7 @@ public class ByteDistributor
     // The copied bits are stored in the lower bits of the return value. The order of the bits does not change.
     private static byte getFirstBits(byte src, int q)
     {
-        return (byte) (Byte.toUnsignedInt(Bitmask.fromNum(q, true).apply(src)) >>> (8 - q));
+        return (byte) (Byte.toUnsignedInt(ByteBitmask.fromNum(q, true).apply(src)) >>> (8 - q));
     }
 
 
@@ -97,6 +97,6 @@ public class ByteDistributor
     // The order of the bits does not change.
     private static byte getLastBits(byte src, int q)
     {
-        return (byte) (Byte.toUnsignedInt(Bitmask.fromNum(q, false).apply(src)));
+        return (byte) (Byte.toUnsignedInt(ByteBitmask.fromNum(q, false).apply(src)));
     }
 }

@@ -2,7 +2,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public enum Bitmask
+
+public enum ByteBitmask
 {
     FIRST_ZERO(true, 0, (byte) 0),
     FIRST_ONE(true, 1, (byte) -128),
@@ -24,13 +25,13 @@ public enum Bitmask
     LAST_EIGHT(false, 8, (byte) -1);
 
 
-    private static final Map<Integer, Bitmask> intToFirstBitmask = Stream.of(values())
-            .filter(Bitmask::isFirst)
-            .collect(Collectors.toMap(Bitmask::getNum, e -> e));
+    private static final Map<Integer, ByteBitmask> intToFirstBitmask = Stream.of(values())
+            .filter(ByteBitmask::isFirst)
+            .collect(Collectors.toMap(ByteBitmask::getNum, e -> e));
 
-    private static final Map<Integer, Bitmask> intToLastBitmask = Stream.of(values())
+    private static final Map<Integer, ByteBitmask> intToLastBitmask = Stream.of(values())
             .filter(e -> !e.isFirst())
-            .collect(Collectors.toMap(Bitmask::getNum, e -> e));
+            .collect(Collectors.toMap(ByteBitmask::getNum, e -> e));
 
 
     private final int num;
@@ -47,7 +48,7 @@ public enum Bitmask
     public byte apply(byte num) { return (byte) (num & mask); }
 
 
-    Bitmask(boolean isFirst, int num, byte mask)
+    ByteBitmask(boolean isFirst, int num, byte mask)
     {
         this.isFirst = isFirst;
         this.num = num;
@@ -55,7 +56,7 @@ public enum Bitmask
     }
 
 
-    public static Bitmask fromNum(int num, boolean isFirst)
+    public static ByteBitmask fromNum(int num, boolean isFirst)
     {
         if (num < 0 || num > 8)
             throw new IllegalArgumentException("Incorrect value of argument 'qInByte'." +

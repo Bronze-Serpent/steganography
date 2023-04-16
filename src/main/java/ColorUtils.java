@@ -1,62 +1,85 @@
-import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 
 public class ColorUtils
 {
 
+    private static final double[] COLOR_RATIO = new double[]{0.299, 0.587, 0.114};
+
+
     public static double calcBrightness(Color c)
     {
-        return 0.299 * c.getRed() + 0.587 * c.getGreen() + 0.114 * c.getBlue();
+        return COLOR_RATIO[0] * c.getRed() + COLOR_RATIO[1] * c.getGreen() + COLOR_RATIO[2] * c.getBlue();
     }
 
 
-    /*
-    public static double calcAvgChannelVal(BufferedImage image, Channel channel, final int x, final int y, int q)
+    public static void makeGroupABrighterThanGroupB(BufferedImage img, List<Coordinate> gA, List<Coordinate> gB)
     {
-        int sumChannels = 0;
+        double gABrightness = calcAvgBrightness(img, gA);
+        double gBBrightness = calcAvgBrightness(img, gB);
 
-        for (int c = 0, currX = x; c < q; c++)
-        {
-            currX = x - 1;
-            if (currX > -1)
-                sumChannels += getChannelVal(image.getRGB(currX, y), channel);
-            else
-                break;
-        }
+        if (Double.compare(gABrightness - gBBrightness, 0) > -1)
+            return;
 
-        for (int c = 0, currX = x; c < q; c++)
-        {
-            currX = x + 1;
-            if (currX < image.getWidth())
-                sumChannels += getChannelVal(image.getRGB(currX, y), channel);
-            else
-                break;
-        }
-
-        for (int c = 0, currY = y; c < q; c++)
-        {
-            currY = y - 1;
-            if (currY > -1)
-                sumChannels += getChannelVal(image.getRGB(x, currY), channel);
-            else
-                break;
-        }
-
-        for (int c = 0, currY = y; c < q; c++)
-        {
-            currY = y + 1;
-            if (currY < image.getHeight())
-                sumChannels += getChannelVal(image.getRGB(x, currY), channel);
-            else
-                break;
-        }
-        return Math.round(sumChannels / (4.0 * q));
+        int diff = (int) (Math.round(gBBrightness - gABrightness));
+        makeGroupBrighter(img, gA, COLOR_RATIO, diff + 1);
     }
-*/
 
 
-    public static double calcAvgChannelVal(BufferedImage image, Channel channel, final int x, final int y, int q)
+    public static void makeGroupBrighter(BufferedImage img, List<Coordinate> group, double[] colorRatio, int incr)
+    {
+        for (Coordinate c : group)
+        {
+            Color oldColor = new Color(img.getRGB(c.x(), c.y()));
+            int[] incChannelsVal = MathUtils.increaseTheAvgOfElem(new int[]{oldColor.getRed(), oldColor.getGreen(),
+                    oldColor.getBlue()}, colorRatio, incr);
+            Color newColor = new Color(incChannelsVal[0], incChannelsVal[1], incChannelsVal[2]);
+
+            img.setRGB(c.x(), c.y(), newColor.getRGB());
+        }
+    }
+
+
+    @Deprecated
+    public static List<List<Coordinate>> splitIntoTwoBrightnessGroups(BufferedImage img, List<Coordinate> pixelCoord)
+    {
+        //sortByBrightness(img, pixelCoord);
+
+        List<List<Coordinate>> splitPixels = new ArrayList<>(2);
+        splitPixels.add(pixelCoord.subList(0, pixelCoord.size() / 2));
+        splitPixels.add(pixelCoord.subList(pixelCoord.size() / 2, pixelCoord.size()));
+
+        return splitPixels;
+    }
+
+
+    public static double calcAvgBrightness(BufferedImage img, List<Coordinate> pixelCoord)
+    {
+        return pixelCoord.stream()
+                .map(c -> new Color(img.getRGB(c.x(), c.y())))
+                .mapToDouble(ColorUtils::calcBrightness)
+                .average().orElseThrow(() -> new IllegalArgumentException(
+                        "it is impossible to calculate the average value. pixelCoord is empty"));
+    }
+
+
+    //Ascending order
+    public static void sortByBrightness(BufferedImage img, List<Coordinate> pixelCoord)
+    {
+        pixelCoord.sort((o1, o2) -> {
+            double o1Brightness = calcBrightness(new Color(img.getRGB(o1.x(), o1.y())));
+            double o2Brightness = calcBrightness(new Color(img.getRGB(o2.x(), o2.y())));
+
+            return Double.compare(o1Brightness - o2Brightness, 0);
+        });
+
+    }
+
+
+    public static double calcAvgChannelValInArea(BufferedImage img, Channel channel, final int x, final int y, int q)
     {
         int sumChannels = 0;
 
@@ -64,15 +87,15 @@ public class ColorUtils
         {
             if (currY != y)
             {
-                if (isCoordinateAvailable(image, x, currY))
-                    sumChannels += getChannelVal(image.getRGB(x, currY), channel);
+                if (isCoordinateAvailable(img, x, currY))
+                    sumChannels += getChannelVal(img.getRGB(x, currY), channel);
             }
             else
                 {
                     for (int j = 0, currX = x - q; j <= q * 2; j++)
                     {
-                        if (isCoordinateAvailable(image, currX, currY) && currX != x)
-                            sumChannels += getChannelVal(image.getRGB(currX, currY), channel);
+                        if (isCoordinateAvailable(img, currX, currY) && currX != x)
+                            sumChannels += getChannelVal(img.getRGB(currX, currY), channel);
 
                         currX++;
                     }
@@ -97,8 +120,8 @@ public class ColorUtils
     }
 
 
-    private static boolean isCoordinateAvailable(BufferedImage image, int x, int y)
+    private static boolean isCoordinateAvailable(BufferedImage img, int x, int y)
     {
-        return x > -1 && x < image.getWidth() && y > -1 && y < image.getHeight();
+        return x > -1 && x < img.getWidth() && y > -1 && y < img.getHeight();
     }
 }
