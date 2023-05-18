@@ -1,11 +1,15 @@
+import utils.Coordinate;
+import utils.ByteBitmask;
+import utils.ColorUtils;
+import utils.CoordinateDistributor;
+import utils.MathUtils;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Stream;
 
 
 public class Main
@@ -16,10 +20,12 @@ public class Main
         //alphaChannelTest();
         //task1();
         //task2();
-        task3();
+        //task3();
+
+        System.out.println(MathUtils.numOfSquaresInACircle(3));
     }
 
-
+/*
     static void task3() throws IOException
     {
         BufferedImage initImg = ImageIO.read(new File("src/main/resources/1.jpg"));
@@ -29,8 +35,9 @@ public class Main
         List<Long> masks = Stream.generate(() -> ThreadLocalRandom.current().nextLong()).limit((long) inf.length * 8 * 2).toList();
 
         BufferedImage filledImg = PictureStorekeeper.putInByBruyndonckx(img, inf, masks);
+        byte[] readInf = PictureStorekeeper.takeOutInfByBruyndonckx(filledImg, masks, inf.length);
 
-        System.out.println(new String(PictureStorekeeper.takeOutInfByBruyndonckx(filledImg, masks, inf.length)));
+        System.out.println(new String(readInf));
         System.out.println("Metrics:");
         System.out.println("μmaxD = " + Metrics.umaxD(initImg, img));
         System.out.println("μMSE = " + Metrics.uMSE(initImg, img));
@@ -65,17 +72,17 @@ public class Main
         byte[] inf = "This is my text".getBytes();
         int qInByte = 3;
 
-        BufferedImage filledImg = PictureStorekeeper.putIn(img, List.of(Channel.RED, Channel.GREEN, Channel.BLUE), inf, qInByte);
-        System.out.println(new String(PictureStorekeeper.takeOutInf(filledImg, List.of(Channel.RED, Channel.GREEN, Channel.BLUE), qInByte, inf.length)));
+        BufferedImage filledImg = PictureStorekeeper.putIn(img, List.of(utils.Channel.RED, utils.Channel.GREEN, utils.Channel.BLUE), inf, qInByte);
+        System.out.println(new String(PictureStorekeeper.takeOutInf(filledImg, List.of(utils.Channel.RED, utils.Channel.GREEN, utils.Channel.BLUE), qInByte, inf.length)));
     }
-
+*/
 
     static void t4() throws IOException
     {
         BufferedImage img = ImageIO.read(new File("src/main/resources/img17X10.jpg"));
 
         List<List<Coordinate>> wholeBlocks = MathUtils.breakIntoWholeBlocks(img.getWidth(), img.getHeight(), 4);
-        List<List<Coordinate>> splitByMask = PictureStorekeeper.splitIntoTwoGroupsByMask(wholeBlocks.get(0), 107);
+        List<List<Coordinate>> splitByMask = CoordinateDistributor.splitIntoTwoGroupsByMask(wholeBlocks.get(0), 107);
         List<List<Coordinate>> splitByBrightness = ColorUtils.splitIntoTwoBrightnessGroups(img, wholeBlocks.get(0));
 
         System.out.println(wholeBlocks.size());

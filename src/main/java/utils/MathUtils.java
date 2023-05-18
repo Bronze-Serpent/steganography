@@ -1,7 +1,10 @@
+package utils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 
 public class MathUtils
@@ -106,6 +109,18 @@ public class MathUtils
         }
 
         return wholeBlocks;
+    }
+
+
+    public static int numOfSquaresInACircle(int rad)
+    {
+        return (rad + numOfSquaresInAQuarter(rad)) * 4;
+    }
+
+
+    private static int numOfSquaresInAQuarter(int rad)
+    {
+        return Stream.iterate(rad, r -> r - 1).limit(rad).reduce(0, Integer::sum);
     }
 
 

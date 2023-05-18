@@ -3,7 +3,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class Metrics
+public class Metric
 {
 
     public static double uNMSE(BufferedImage fst, BufferedImage snd)
