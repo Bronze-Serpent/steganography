@@ -3,5 +3,5 @@ package hiders;
 
 public enum HiderType
 {
-    SIMPLE, CUTTER, BRUYNDONCKX
+    SIMPLE, CUTTER, BRUYNDONCKX, KOCHZHAO
 }

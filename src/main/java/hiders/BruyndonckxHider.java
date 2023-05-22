@@ -20,7 +20,7 @@ public class BruyndonckxHider implements Hider
 
 
     @Override
-    public BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf)
+    public BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf) throws HiderSizeException
     {
         List<Long> masks = Stream.generate(() -> ThreadLocalRandom.current().nextLong())
                 .limit((long) inf.length * 8 * 2)
@@ -31,7 +31,7 @@ public class BruyndonckxHider implements Hider
 
 
     @Override
-    public byte[] takeOutInf(BufferedImage stegoContainer, int bytesQuantity)
+    public byte[] takeOutInf(BufferedImage stegoContainer, int bytesQuantity) throws HiderSizeException
     {
         List<Long> masks = Stream.generate(() -> ThreadLocalRandom.current().nextLong())
                 .limit((long) bytesQuantity * 2)
@@ -48,13 +48,19 @@ public class BruyndonckxHider implements Hider
     }
 
 
-    public static BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf, List<Long> masks, int blockSize)
+    public static BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf, List<Long> masks, int blockSize) throws HiderSizeException
     {
-        if (inf.length == 0)
-            return stegoContainer;
-
         if (masks.size() < inf.length * 8 * 2)
             throw new IllegalArgumentException("masks not provided for all blocks");
+
+        if (!willTheInfFitInTheCont(stegoContainer, inf, blockSize))
+        {
+            int contSize = MathUtils.breakIntoWholeBlocks(stegoContainer.getWidth(),
+                    stegoContainer.getHeight(), blockSize).size() - 1;
+
+            throw new HiderSizeException("An attempt to hide " + inf.length * 8 + " bits to a" + contSize
+                    + "-bit container for this method", contSize, inf.length * 8);
+        }
 
         byte[] preparedInformation = ByteDistributor.distributeBitsBy(inf, 1);
         List<List<Coordinate>> wholeBlocks = MathUtils.breakIntoWholeBlocks(stegoContainer.getWidth(),
@@ -84,27 +90,28 @@ public class BruyndonckxHider implements Hider
     }
 
 
-    public static byte[] takeOutInf(BufferedImage stegoContainer, List<Long> masks, int blockSize, int bytesQuantity)
+    public static byte[] takeOutInf(BufferedImage stegoContainer, List<Long> masks, int blockSize, int bytesQuantity) throws HiderSizeException
     {
-        if (bytesQuantity == 0)
-            return new byte[0];
         if (masks.size() < bytesQuantity * 8 * 2)
             throw new IllegalArgumentException("masks not provided for all blocks");
+
+        int contSize = MathUtils.breakIntoWholeBlocks(stegoContainer.getWidth(),
+                stegoContainer.getHeight(), blockSize).size() - 1;
+        if (bytesQuantity > contSize)
+            throw new HiderSizeException("An attempt to extract " + bytesQuantity + " bits from a" + contSize
+                    + "-bit container for this method", contSize, bytesQuantity);
 
         byte[] readBites = new byte[bytesQuantity * 8];
         List<List<Coordinate>> wholeBlocks = MathUtils.breakIntoWholeBlocks(stegoContainer.getWidth(),
                 stegoContainer.getHeight(), blockSize);
 
-        int blockI = 0;
-        int maskI = 0;
-        for (int i = 0; i < readBites.length; i++)
+        for (int maskI = 0, i = 0; i < readBites.length; i++)
         {
-            if (isItZeroBruyndonckx(stegoContainer, wholeBlocks.get(blockI), masks.subList(maskI, maskI + 2)))
+            if (isItZeroBruyndonckx(stegoContainer, wholeBlocks.get(i), masks.subList(maskI, maskI + 2)))
                 readBites[i] = 0;
             else
                 readBites[i] = 1;
 
-            blockI++;
             maskI += 2;
         }
 
@@ -117,7 +124,7 @@ public class BruyndonckxHider implements Hider
         List<List<Coordinate>> wholeBlocks = MathUtils.breakIntoWholeBlocks(stegoContainer.getWidth(),
                 stegoContainer.getHeight(), blockSize);
 
-        return wholeBlocks.size() >= inf.length;
+        return wholeBlocks.size() - 1 > inf.length * 8;
     }
 
 
@@ -130,5 +137,4 @@ public class BruyndonckxHider implements Hider
         return ColorUtils.calcAvgBrightness(img, splitByMask_1.get(1)) - ColorUtils.calcAvgBrightness(img, splitByMask_1.get(0)) > 1E-5 &&
                 ColorUtils.calcAvgBrightness(img, splitByMask_2.get(1)) - ColorUtils.calcAvgBrightness(img, splitByMask_2.get(0)) > 1E-5;
     }
-
 }
