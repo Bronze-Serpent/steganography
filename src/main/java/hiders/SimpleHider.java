@@ -25,11 +25,15 @@ public class SimpleHider implements Hider
 
 
     @Override
-    public BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf)
+    public BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf) throws HiderSizeException
     {
-        if (usedChannels.isEmpty() || inf.length == 0 || qInByte == 0)
-            return stegoContainer;
+        if (!willTheInfFit(stegoContainer, inf))
+        {
+            int contSize = usedChannels.size() * qInByte * stegoContainer.getHeight() * stegoContainer.getWidth();
 
+            throw new HiderSizeException("An attempt to hide " + inf.length * 8 + " bits to a" + contSize
+                    + "-bit container for this method", contSize, inf.length * 8);
+        }
         byte[] preparedInformation = ByteDistributor.distributeBitsBy(inf, qInByte);
         Random elector = new Random((long) stegoContainer.getHeight() * stegoContainer.getWidth());
 
@@ -53,10 +57,12 @@ public class SimpleHider implements Hider
 
 
     @Override
-    public byte[] takeOutInf(BufferedImage stegoContainer, int bytesQuantity)
+    public byte[] takeOutInf(BufferedImage stegoContainer, int bytesQuantity) throws HiderSizeException
     {
-        if (usedChannels.isEmpty() || bytesQuantity == 0 || qInByte == 0)
-            return new byte[0];
+        int contSize = usedChannels.size() * qInByte * stegoContainer.getHeight() * stegoContainer.getWidth();
+        if (bytesQuantity > contSize)
+            throw new HiderSizeException("An attempt to extract " + bytesQuantity + " bits from a" + contSize
+                    + "-bit container for this method", contSize, bytesQuantity);
 
         return ByteDistributor.collectBitsBy(readBytes(stegoContainer, usedChannels, qInByte, bytesQuantity), qInByte);
     }
@@ -71,7 +77,7 @@ public class SimpleHider implements Hider
 
     public static boolean willTheInfFitInTheCont(BufferedImage stegoContainer, byte[] inf, List<Channel> usedChannels, int qInByte)
     {
-        return usedChannels.size() * qInByte * stegoContainer.getHeight() * stegoContainer.getWidth() >= inf.length * 8;
+        return usedChannels.size() * qInByte * stegoContainer.getHeight() * stegoContainer.getWidth() > inf.length * 8;
     }
 
 

@@ -25,10 +25,15 @@ public class CutterHider implements Hider
 
 
     @Override
-    public BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf)
+    public BufferedImage hideInf(BufferedImage stegoContainer, byte[] inf) throws HiderSizeException
     {
-        if (inf.length == 0 || sglEnergy == 0)
-            return stegoContainer;
+        if (!willTheInfFit(stegoContainer, inf))
+        {
+            int contSize = stegoContainer.getHeight() * stegoContainer.getWidth() / MathUtils.numOfSquaresInACircle(areaForCalcAvg);
+
+            throw new HiderSizeException("An attempt to hide " + inf.length * 8 + " bits to a" + contSize
+                    + "-bit container for this method", contSize, inf.length * 8);
+        }
 
         byte[] preparedInformation = ByteDistributor.distributeBitsBy(inf, 1);
         Random elector = new Random((long) stegoContainer.getHeight() * stegoContainer.getWidth());
@@ -50,10 +55,12 @@ public class CutterHider implements Hider
 
 
     @Override
-    public byte[] takeOutInf(BufferedImage stegoContainer, int bytesQuantity)
+    public byte[] takeOutInf(BufferedImage stegoContainer, int bytesQuantity) throws HiderSizeException
     {
-        if (bytesQuantity == 0)
-            return new byte[0];
+        int contSize = stegoContainer.getHeight() * stegoContainer.getWidth() / MathUtils.numOfSquaresInACircle(areaForCalcAvg);
+        if (bytesQuantity > contSize)
+            throw new HiderSizeException("An attempt to extract " + bytesQuantity + " bits from a" + contSize
+                    + "-bit container for this method", contSize, bytesQuantity);
 
         byte[] readBites = new byte[bytesQuantity * 8];
         Random elector = new Random((long) stegoContainer.getHeight() * stegoContainer.getWidth());
@@ -77,11 +84,11 @@ public class CutterHider implements Hider
     }
 
 
-    //the method calculates the place based on the assumption
+    // the method calculates the place based on the assumption
     // that the areas for determining the average color value will not intersect.
     public static boolean willTheInfFitInTheCont(BufferedImage stegoContainer, byte[] inf, int q)
     {
-        return stegoContainer.getHeight() * stegoContainer.getWidth() / MathUtils.numOfSquaresInACircle(q) >= inf.length * 8;
+        return stegoContainer.getHeight() * stegoContainer.getWidth() / MathUtils.numOfSquaresInACircle(q) > inf.length * 8;
     }
 
 

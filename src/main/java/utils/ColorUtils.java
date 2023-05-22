@@ -1,15 +1,40 @@
 package utils;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.Color;
 import java.awt.image.BufferedImage;
+
+import static utils.Channel.*;
 
 
 public class ColorUtils
 {
 
     private static final double[] COLOR_RATIO = new double[]{0.299, 0.587, 0.114};
+
+
+    public static void writeNewColors(BufferedImage img, List<Coordinate> block, List<Integer> colorVal, Channel channel)
+    {
+        if (block.size() != colorVal.size())
+            throw new IllegalArgumentException("List sizes must match");
+
+        for (int i = 0; i < block.size(); i++)
+        {
+            int rgb = img.getRGB(block.get(i).x(), block.get(i).y());
+            int r = getChannelVal(rgb, RED);
+            int g = getChannelVal(rgb, GREEN);
+            int b = getChannelVal(rgb, BLUE);
+
+            Color newColor = switch (channel) {
+                case RED -> new Color(colorVal.get(i), g, b);
+                case GREEN -> new Color(r, colorVal.get(i), b);
+                case BLUE -> new Color(r, g, colorVal.get(i));
+                case ALPHA -> new Color(r,g,b, colorVal.get(i));
+            };
+            img.setRGB(block.get(i).x(), block.get(i).y(), newColor.getRGB());
+        }
+    }
 
 
     public static double calcBrightness(Color c)
@@ -111,13 +136,11 @@ public class ColorUtils
 
     public static int getChannelVal(int rgb, Channel channel)
     {
-        Color color = new Color(rgb, true);
-
         return switch (channel) {
-            case RED -> color.getRed();
-            case GREEN -> color.getGreen();
-            case BLUE -> color.getBlue();
-            case ALPHA -> color.getAlpha();
+            case RED -> (rgb >>> 16) & 0xFF;
+            case GREEN -> (rgb >>> 8) & 0xFF;
+            case BLUE -> rgb & 0xFF;
+            case ALPHA -> (rgb >>> 24) & 0xFF;
         };
     }
 

@@ -1,8 +1,6 @@
-import utils.Coordinate;
-import utils.ByteBitmask;
-import utils.ColorUtils;
-import utils.CoordinateDistributor;
-import utils.MathUtils;
+import hiders.HiderSizeException;
+import hiders.KochZhaoHider;
+import utils.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -10,20 +8,69 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
+
+import static utils.MathUtils.*;
 
 
 public class Main
 {
-    public static void main(String[] args) throws IOException
+
+    public static void main(String[] args) throws IOException, HiderSizeException
     {
         //t3();
         //alphaChannelTest();
         //task1();
         //task2();
         //task3();
-
-        System.out.println(MathUtils.numOfSquaresInACircle(3));
+        //t7();
+        task4();
+        //t8();
     }
+
+
+    static void task4() throws IOException, HiderSizeException
+    {
+        BufferedImage initImg = ImageIO.read(new File("src/main/resources/1.jpg"));
+        BufferedImage img = makeImageCopy(initImg);
+
+        byte[] inf = "This is my text".getBytes();
+        byte[] preparedInf = ByteDistributor.distributeBitsBy(inf, 1);
+        List<Long> masks = Stream.generate(() -> ThreadLocalRandom.current().nextLong()).limit((long) inf.length * 8 * 2).toList();
+
+        BufferedImage filledImg = KochZhaoHider.hideInf(img, inf, 8, 25, 1234);
+        byte[] readInf = KochZhaoHider.takeOutInf(filledImg, inf.length, 8, 1234);
+
+        System.out.println(new String(readInf));
+    }
+
+
+    private static void t7() throws IOException
+    {
+        BufferedImage initImg = ImageIO.read(new File("src/main/resources/1.jpg"));
+
+        for (int i = 0; i < initImg.getWidth(); i++)
+            for (int j = 0; j < initImg.getHeight(); j++)
+                System.out.printf("Color blue: %d  blue: %d\n", new Color(initImg.getRGB(i, j)).getBlue(), (initImg.getRGB(i, j)) & 0xFF);
+    }
+
+
+    private static void t6()
+    {
+        int[][] blueVal = Stream.generate(() -> Stream.generate(() -> ThreadLocalRandom.current().nextInt(255))
+                        .limit(8)
+                        .mapToInt(e -> e)
+                        .toArray())
+                .limit(8)
+                .toArray(int[][]::new);
+
+        double[][] dctResult = dct8X8(blueVal);
+        double[][] idctResult = idct8X8(dctResult);
+
+        System.out.println("Hi");
+    }
+
 
 /*
     static void task3() throws IOException
