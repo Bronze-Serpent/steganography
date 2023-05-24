@@ -1,5 +1,4 @@
-import hiders.HiderSizeException;
-import hiders.KochZhaoHider;
+import hiders.*;
 import utils.*;
 
 import javax.imageio.ImageIO;
@@ -19,14 +18,7 @@ public class Main
 
     public static void main(String[] args) throws IOException, HiderSizeException
     {
-        //t3();
-        //alphaChannelTest();
-        //task1();
-        //task2();
-        //task3();
-        //t7();
         task4();
-        //t8();
     }
 
 
@@ -36,13 +28,17 @@ public class Main
         BufferedImage img = makeImageCopy(initImg);
 
         byte[] inf = "This is my text".getBytes();
-        byte[] preparedInf = ByteDistributor.distributeBitsBy(inf, 1);
-        List<Long> masks = Stream.generate(() -> ThreadLocalRandom.current().nextLong()).limit((long) inf.length * 8 * 2).toList();
 
-        BufferedImage filledImg = KochZhaoHider.hideInf(img, inf, 8, 25, 1234);
-        byte[] readInf = KochZhaoHider.takeOutInf(filledImg, inf.length, 8, 1234);
+        HiderFactory hiderFactory = new HiderFactory();
+        Hider hider = hiderFactory.createHider(HiderType.KOCHZHAO);
+
+        hider.hideInf(img, inf);
+        byte[] readInf = hider.takeOutInf(img, inf.length);
 
         System.out.println(new String(readInf));
+        System.out.println("μmaxD = " + Metric.umaxD(initImg, img));
+        System.out.println("μMSE = " + Metric.uMSE(initImg, img));
+        System.out.println("μUQI = " + Metric.uUQI(initImg, img));
     }
 
 
@@ -71,58 +67,6 @@ public class Main
         System.out.println("Hi");
     }
 
-
-/*
-    static void task3() throws IOException
-    {
-        BufferedImage initImg = ImageIO.read(new File("src/main/resources/1.jpg"));
-        BufferedImage img = makeImageCopy(initImg);
-
-        byte[] inf = "This is my text".getBytes();
-        List<Long> masks = Stream.generate(() -> ThreadLocalRandom.current().nextLong()).limit((long) inf.length * 8 * 2).toList();
-
-        BufferedImage filledImg = PictureStorekeeper.putInByBruyndonckx(img, inf, masks);
-        byte[] readInf = PictureStorekeeper.takeOutInfByBruyndonckx(filledImg, masks, inf.length);
-
-        System.out.println(new String(readInf));
-        System.out.println("Metrics:");
-        System.out.println("μmaxD = " + Metrics.umaxD(initImg, img));
-        System.out.println("μMSE = " + Metrics.uMSE(initImg, img));
-        System.out.println("μLp = " + Metrics.uLp(initImg, img));
-    }
-
-
-    public static void task2() throws IOException
-    {
-        BufferedImage initImg = ImageIO.read(new File("src/main/resources/8.jpg"));
-        BufferedImage img = makeImageCopy(initImg);
-
-        byte[] inf = "This is my another text".getBytes();
-        int q = 3;
-        double sglEnergy = 0.6;
-
-        BufferedImage filledImg = PictureStorekeeper.putInByCutter(img, inf, sglEnergy);
-        byte[] readInf = PictureStorekeeper.takeOutInfByCutter(filledImg, q, inf.length);
-
-        System.out.println(new String(readInf));
-        System.out.println("Metrics:");
-        System.out.println("μmaxD = " + Metrics.umaxD(initImg, img));
-        System.out.println("μNMSE = " + Metrics.uNMSE(initImg, img));
-        System.out.println("μUQI = " + Metrics.uUQI(initImg, img));
-    }
-
-
-    public static void task1() throws IOException
-    {
-        BufferedImage img = ImageIO.read(new File("src/main/resources/Saruman.jpg"));
-
-        byte[] inf = "This is my text".getBytes();
-        int qInByte = 3;
-
-        BufferedImage filledImg = PictureStorekeeper.putIn(img, List.of(utils.Channel.RED, utils.Channel.GREEN, utils.Channel.BLUE), inf, qInByte);
-        System.out.println(new String(PictureStorekeeper.takeOutInf(filledImg, List.of(utils.Channel.RED, utils.Channel.GREEN, utils.Channel.BLUE), qInByte, inf.length)));
-    }
-*/
 
     static void t4() throws IOException
     {
